@@ -8,11 +8,9 @@
   <p>リダイレクト中です…</p>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const params = new URLSearchParams(location.search);
-      const service = params.get("service");
       const statusElem = document.getElementById("status");
-
-      if (!statusElem) return;
+      const params = new URLSearchParams(window.location.search);
+      const service = params.get("service");
 
       if (!service) {
         statusElem.innerText = "サービス名が指定されていません。";
@@ -24,24 +22,26 @@
       fetch(gasApiUrl)
         .then(res => res.text())
         .then(url => {
-          if (url.startsWith("http")) {
-            fetch(url, { mode: "no-cors" })
-              .then(() => {
-                location.href = url;
-              })
-              .catch(() => {
-                statusElem.innerText = "ただいまメンテナンス中です。";
-              });
-
-            setTimeout(() => {
-              statusElem.innerText = "ただいまメンテナンス中です。";
-            }, 3000);
-          } else {
+          if (!url.startsWith("http")) {
             statusElem.innerText = "該当サービスが見つかりません。";
+            return;
           }
+
+          // 本番のURLにGETリクエストを送って確認
+          fetch(url, { method: 'GET' })
+            .then(() => {
+              // 成功 → リダイレクト
+              location.href = url;
+            })
+            .catch((err) => {
+              // ネットワークエラー → メンテナンス中表示
+              console.error("接続失敗:", err);
+              statusElem.innerText = "ただいまメンテナンス中です。";
+            });
         })
         .catch(err => {
-          statusElem.innerText = "エラーが発生しました：" + err;
+          console.error("GASリクエスト失敗:", err);
+          statusElem.innerText = "エラーが発生しました。";
         });
     });
   </script>
