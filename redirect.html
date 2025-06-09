@@ -7,32 +7,35 @@
 <body>
   <p>リダイレクト中です…</p>
   <script>
-    const params = new URLSearchParams(location.search);
-    const service = params.get("service");
-    const statusElem = document.getElementById("status");
+    document.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(location.search);
+      const service = params.get("service");
+      const statusElem = document.getElementById("status");
 
-    if (!service) {
-      statusElem.innerText = "サービス名が指定されていません。";
-    } else {
+      if (!statusElem) return;
+
+      if (!service) {
+        statusElem.innerText = "サービス名が指定されていません。";
+        return;
+      }
+
       const gasApiUrl = "https://script.google.com/macros/s/AKfycbyc6dd8Ja0jgvyjRKxTR6_52vn6xo33vtS_uDe_TXwgWL12kreUcSPzXxhv0FgAtWjp/exec?service=" + encodeURIComponent(service);
 
       fetch(gasApiUrl)
         .then(res => res.text())
         .then(url => {
           if (url.startsWith("http")) {
-            // URLに接続できるか確認
-            fetch(url, { mode: "no-cors" }) // no-cors で試みる
+            fetch(url, { mode: "no-cors" })
               .then(() => {
-                location.href = url; // アクセス成功と仮定してリダイレクト
+                location.href = url;
               })
               .catch(() => {
                 statusElem.innerText = "ただいまメンテナンス中です。";
               });
 
-              // no-cors の場合は成功/失敗の検出が難しいので、時間制限付き
-              setTimeout(() => {
-                statusElem.innerText = "ただいまメンテナンス中です。";
-              }, 3000); // 3秒待ってもリダイレクトしない場合
+            setTimeout(() => {
+              statusElem.innerText = "ただいまメンテナンス中です。";
+            }, 3000);
           } else {
             statusElem.innerText = "該当サービスが見つかりません。";
           }
@@ -40,7 +43,7 @@
         .catch(err => {
           statusElem.innerText = "エラーが発生しました：" + err;
         });
-    }
+    });
   </script>
 </body>
 </html>
