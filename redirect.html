@@ -7,43 +7,31 @@
 <body>
   <p id="status">リダイレクト中です…</p>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const statusElem = document.getElementById("status");
-      const params = new URLSearchParams(window.location.search);
-      const service = params.get("service");
+    const service = new URLSearchParams(location.search).get("service");
+    const api = "https://script.google.com/macros/s/AKfycbyc6dd8Ja0jgvyjRKxTR6_52vn6xo33vtS_uDe_TXwgWL12kreUcSPzXxhv0FgAtWjp/exec?service=" + service;
 
-      if (!service) {
-        statusElem.innerText = "サービス名が指定されていません。";
-        return;
-      }
+    fetch(api)
+      .then(res => res.text())
+      .then(url => {
+        if (!url.startsWith("http")) {
+          document.getElementById("status").innerText = "サービスが見つかりません";
+          return;
+        }
 
-      const gasApiUrl = "https://script.google.com/macros/s/AKfycbyc6dd8Ja0jgvyjRKxTR6_52vn6xo33vtS_uDe_TXwgWL12kreUcSPzXxhv0FgAtWjp/exec?service=" + encodeURIComponent(service);
-
-      fetch(gasApiUrl)
-        .then(res => res.text())
-        .then(url => {
-          if (!url.startsWith("http")) {
-            statusElem.innerText = "該当サービスが見つかりません。";
-            return;
-          }
-
-          // 本番のURLにGETリクエストを送って確認
-          fetch(url, { method: 'GET' })
-            .then(() => {
-              // 成功 → リダイレクト
-              location.href = url;
-            })
-            .catch((err) => {
-              // ネットワークエラー → メンテナンス中表示
-              console.error("接続失敗:", err);
-              statusElem.innerText = "ただいまメンテナンス中です。";
-            });
-        })
-        .catch(err => {
-          console.error("GASリクエスト失敗:", err);
-          statusElem.innerText = "エラーが発生しました。";
-        });
-    });
+        const img = new Image();
+        img.onload = () => {
+          // 接続できた（＝リダイレクトへ）
+          location.href = url;
+        };
+        img.onerror = () => {
+          // 接続できなかった → メンテナンス中
+          document.getElementById("status").innerText = "ただいまメンテナンス中です。";
+        };
+        img.src = url + "/favicon.ico"; // 存在しそうなリソースをリクエスト
+      })
+      .catch(err => {
+        document.getElementById("status").innerText = "GAS API 接続失敗";
+      });
   </script>
 </body>
 </html>
