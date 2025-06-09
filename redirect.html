@@ -9,9 +9,10 @@
   <script>
     const params = new URLSearchParams(location.search);
     const service = params.get("service");
+    const statusElem = document.getElementById("status");
 
     if (!service) {
-      document.body.innerText = "サービス名が指定されていません。";
+      statusElem.innerText = "サービス名が指定されていません。";
     } else {
       const gasApiUrl = "https://script.google.com/macros/s/AKfycbyc6dd8Ja0jgvyjRKxTR6_52vn6xo33vtS_uDe_TXwgWL12kreUcSPzXxhv0FgAtWjp/exec?service=" + encodeURIComponent(service);
 
@@ -19,13 +20,25 @@
         .then(res => res.text())
         .then(url => {
           if (url.startsWith("http")) {
-            location.href = url;
+            // URLに接続できるか確認
+            fetch(url, { mode: "no-cors" }) // no-cors で試みる
+              .then(() => {
+                location.href = url; // アクセス成功と仮定してリダイレクト
+              })
+              .catch(() => {
+                statusElem.innerText = "ただいまメンテナンス中です。";
+              });
+
+              // no-cors の場合は成功/失敗の検出が難しいので、時間制限付き
+              setTimeout(() => {
+                statusElem.innerText = "ただいまメンテナンス中です。";
+              }, 3000); // 3秒待ってもリダイレクトしない場合
           } else {
-            document.body.innerText = "該当サービスが見つかりません。";
+            statusElem.innerText = "該当サービスが見つかりません。";
           }
         })
         .catch(err => {
-          document.body.innerText = "エラーが発生しました：" + err;
+          statusElem.innerText = "エラーが発生しました：" + err;
         });
     }
   </script>
