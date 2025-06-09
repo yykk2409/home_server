@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>リダイレクト中…</title>
+</head>
+<body>
+  <p>リダイレクト中です…</p>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const service = params.get("service");
+
+    if (!service) {
+      document.body.innerText = "サービス名が指定されていません。";
+    } else {
+      const gasApiUrl = "https://script.google.com/macros/s/AKfycbyc6dd8Ja0jgvyjRKxTR6_52vn6xo33vtS_uDe_TXwgWL12kreUcSPzXxhv0FgAtWjp/exec?service=" + encodeURIComponent(service);
+
+      fetch(gasApiUrl)
+        .then(res => res.text())
+        .then(url => {
+          if (url.startsWith("http")) {
+            location.href = url;
+          } else {
+            document.body.innerText = "該当サービスが見つかりません。";
+          }
+        })
+        .catch(err => {
+          document.body.innerText = "エラーが発生しました：" + err;
+        });
+    }
+  </script>
+</body>
+</html>
